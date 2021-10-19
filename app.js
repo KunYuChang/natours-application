@@ -1,17 +1,38 @@
 const fs = require('fs');
 const express = require('express');
+const morgan = require('morgan');
+
 const app = express();
+
+// 1) Middleware
+
+app.use(morgan('dev'));
 
 // express.json() : Express 可以解讀 JSON String 轉成 JavaScript Object
 app.use(express.json());
+
+app.use((req, res, next) => {
+  console.log('Hello form the middleware ✋');
+  next();
+});
+
+app.use((req, res, next) => {
+  req.requestTime = new Date().toISOString();
+  next();
+});
 
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
 );
 
+// 2) ROUTE HANDLES
+
 const getAllTours = (req, res) => {
+  console.log(req.requestTime);
+
   res.status(200).json({
     status: 'success',
+    requestedAt: req.requestTime,
     results: tours.length,
     data: {
       tours,
@@ -116,6 +137,7 @@ const deleteTour = (req, res) => {
 // app.patch('/api/v1/tours/:id', updateTour);
 // app.delete('/api/v1/tours/:id', deleteTour);
 
+// 3) ROUTE
 app.route('/api/v1/tours').get(getAllTours).post(createTour);
 app
   .route('/api/v1/tours/:id')
@@ -123,5 +145,6 @@ app
   .patch(updateTour)
   .delete(deleteTour);
 
+// 4) START SERVER
 const port = 3000;
 app.listen(port, () => console.log(`App running on port ${port}`));
