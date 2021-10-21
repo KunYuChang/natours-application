@@ -2,8 +2,32 @@ const Tour = require('../models/tourModel');
 
 exports.getAllTours = async (req, res) => {
   try {
-    const tours = await Tour.find();
+    // 1) 創立查詢
+    // http://localhost:3000/api/v1/tours?duration[gte]=5&difficulty=easy
+    const queryObj = { ...req.query };
 
+    // 初階過濾
+    const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    excludedFields.forEach((el) => delete queryObj[el]);
+
+    // 進階過濾
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+
+    // MongoDB 依過濾條件尋找資料
+    const query = Tour.find(JSON.parse(queryStr));
+
+    // 2) 執行查詢
+    const tours = await query;
+
+    // Mongoose 依過濾條件尋找資料 (作為參考)
+    // const tours = await Tour.find()
+    //   .where('duration')
+    //   .equals(5)
+    //   .where('difficulty')
+    //   .equlas('easy');
+
+    // 3) 發送回應
     res.status(200).json({
       status: 'success',
       results: tours.length,
