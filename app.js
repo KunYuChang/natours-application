@@ -7,11 +7,13 @@ const userRouter = require('./routes/userRoutes');
 const app = express();
 
 // 1) Middleware
-
-app.use(morgan('dev'));
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
 
 // express.json() : Express 可以解讀 JSON String 轉成 JavaScript Object
 app.use(express.json());
+app.use(express.static(`${__dirname}/public`));
 
 app.use((req, res, next) => {
   console.log('Hello form the middleware ✋');
