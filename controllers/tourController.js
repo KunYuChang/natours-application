@@ -1,110 +1,103 @@
-const fs = require('fs');
+const Tour = require('../models/tourModel');
 
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
-);
+exports.getAllTours = async (req, res) => {
+  try {
+    const tours = await Tour.find();
 
-exports.checkID = (req, res, next, val) => {
-  console.log(`Tour id is: ${val}`);
-
-  if (req.params.id * 1 > tours.length) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'Invalid ID',
+    res.status(200).json({
+      status: 'success',
+      results: tours.length,
+      data: {
+        tours,
+      },
+    });
+  } catch (err) {
+    res.status(404).json({
+      statue: 'fail',
+      message: err,
     });
   }
-  next();
 };
 
-exports.checkBody = (req, res, next) => {
-  if (!req.body.name || !req.body.price) {
-    return res.status(400).json({
-      status: 'fail',
-      message: 'Missing name or price',
+exports.getTour = async (req, res) => {
+  try {
+    // Tour.findById -- mongoose
+    const tour = await Tour.findById(req.params.id);
+
+    // Tour.findOne({ _id: req.params.id}) -- mongoDB
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.status(404).json({
+      statue: 'fail',
+      message: err,
     });
   }
-  next();
 };
 
-exports.getAllTours = (req, res) => {
-  console.log(req.requestTime);
+exports.createTour = async (req, res) => {
+  try {
+    const newTour = await Tour.create(req.body);
 
-  res.status(200).json({
-    status: 'success',
-    requestedAt: req.requestTime,
-    results: tours.length,
-    data: {
-      tours,
-    },
-  });
+    res.status(201).json({
+      status: 'success',
+      data: {
+        tour: newTour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      statue: 'fail',
+      message: 'Invalid data sent!',
+    });
+  }
 };
 
-exports.getTour = (req, res) => {
-  console.log(req.params);
+exports.updateTour = async (req, res) => {
+  try {
+    /**
+     *  @param req.params.id - 路由引數值
+     *  @param req.body - POST傳過來的值
+     *  @param {Object} opts - Mongoose的功能設定
+     *  @param {Boolean} opts.new - 返回更新值
+     *  @param {Boolean} opts.runValidators - 開啟更新驗證
+     */
+    const opts = { new: true, runValidators: true };
 
-  const id = req.params.id * 1; // 字串轉數字的小撇步
-  const tour = tours.find((el) => el.id === id);
+    const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, opts);
 
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
+    res.status(200).json({
+      status: 'success',
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err,
+    });
+  }
 };
 
-exports.createTour = (req, res) => {
-  // 產生新ID : 抓取最後一筆資料ID + 1
-  const newId = tours[tours.length - 1].id + 1;
-  // 合併 ID & POST過來的資料 (req.body)
-  const newTour = Object.assign({ id: newId }, req.body);
-  tours.push(newTour);
+exports.deleteTour = async (req, res) => {
+  try {
+    // 由於沒有要返回內容給用戶端，所以可以直接執行，而不用使用變數去接。
+    await Tour.findByIdAndDelete(req.params.id);
 
-  fs.writeFile(
-    `${__dirname}/dev-data/data/tours-simple.json`,
-    JSON.stringify(tours),
-    (err) => {
-      res.status(201).json({
-        status: 'success',
-        data: {
-          tour: newTour,
-        },
-      });
-    }
-  );
-};
-
-exports.updateTour = (req, res) => {
-  const id = req.params.id * 1;
-  const tour = tours.find((tour) => tour.id === id);
-
-  const updatedTour = { ...tour, ...req.body };
-  const updatedTours = tours.map((tour) =>
-    tour.id === updatedTour.id ? updatedTour : tour
-  );
-
-  fs.writeFile(
-    `${__dirname}/dev-data/data/tours-simple.json`,
-    JSON.stringify(updatedTours),
-    (err) => {
-      res.status(200).send({
-        status: 'success',
-        data: updatedTour,
-      });
-    }
-  );
-};
-
-exports.deleteTour = (req, res) => {
-  const id = req.params.id * 1;
-  const tour = tours.find((tour) => tour.id === id);
-  const index = tours.indexOf(tour);
-  tours.splice(index, 1);
-  fs.writeFile(
-    `${__dirname}/dev-data/data/tours-simple.json`,
-    JSON.stringify(tours),
-    (err) => {
-      res.status(204).json({ status: 'success', data: null });
-    }
-  );
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err,
+    });
+  }
 };
