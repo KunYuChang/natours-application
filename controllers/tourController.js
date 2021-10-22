@@ -141,16 +141,76 @@ exports.getTourStats = async (req, res) => {
         // 排序 : 依據平均金額由低到高排序
         $sort: { avgPrice: 1 },
       },
-      // {
-      //   // 匹配 : 不等於EASY才符合
-      //   $match: { _id: { $ne: 'EASY' } },
-      // },
+      {
+        // 匹配 : 不等於EASY才符合
+        $match: { _id: { $ne: 'EASY' } },
+      },
     ]);
 
     res.status(200).json({
       status: 'success',
       data: {
         stats,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err,
+    });
+  }
+};
+
+exports.getMonthlyPlan = async (req, res) => {
+  try {
+    const year = req.params.year * 1;
+
+    const plan = await Tour.aggregate([
+      {
+        // 拆分（unwind）可以將陣列中的每一個值分解為單獨的文檔
+        $unwind: '$startDates',
+      },
+      {
+        // 設置日期區間
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        // 統計每個月的旅遊量
+        $group: {
+          _id: { $month: '$startDates' },
+          numTourStarts: { $sum: 1 },
+          tours: { $push: '$name' },
+        },
+      },
+      {
+        // 新增月份欄位
+        $addFields: { month: '$_id' },
+      },
+      {
+        // 不顯示_id
+        $project: {
+          _id: 0,
+        },
+      },
+      {
+        // 排序高到低
+        $sort: { numTourStarts: -1 },
+      },
+      {
+        // 限制輸出的筆數
+        $limit: 12,
+      },
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        plan,
       },
     });
   } catch (err) {
