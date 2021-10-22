@@ -116,3 +116,47 @@ exports.deleteTour = async (req, res) => {
     });
   }
 };
+
+exports.getTourStats = async (req, res) => {
+  try {
+    const stats = await Tour.aggregate([
+      {
+        // 匹配 : 平均分數高於4.5才符合
+        $match: { ratingsAverage: { $gte: 4.5 } },
+      },
+      {
+        // 分組
+        $group: {
+          // 依據difficulty進行分組 (轉大寫)
+          _id: { $toUpper: '$difficulty' },
+          numTours: { $sum: 1 },
+          numRatings: { $sum: '$ratingsQuantity' },
+          avgRating: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+        },
+      },
+      {
+        // 排序 : 依據平均金額由低到高排序
+        $sort: { avgPrice: 1 },
+      },
+      // {
+      //   // 匹配 : 不等於EASY才符合
+      //   $match: { _id: { $ne: 'EASY' } },
+      // },
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        stats,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err,
+    });
+  }
+};
