@@ -35,3 +35,11 @@
 - Express
 - MongoDB
 - Mongoose
+
+## Package
+
+- [slugify](https://www.npmjs.com/package/slugify)
+- [morgan](https://www.npmjs.com/package/morgan)
+- [validator](https://www.npmjs.com/package/validator)
+- [ndb](https://www.npmjs.com/package/ndb)
+- [win-node-env](https://www.npmjs.com/package/win-node-env)

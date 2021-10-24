@@ -1,6 +1,8 @@
 const express = require('express');
 const morgan = require('morgan');
 
+const AppError = require('./utils/appError');
+const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 
@@ -29,5 +31,21 @@ app.use((req, res, next) => {
 
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+
+/**
+ * method all 代表 get, post...等等都符合
+ * '*' 全部匹配
+ * req.originalUrl 最初請求的url
+ */
+app.all('*', (req, res, next) => {
+  /**
+   * Global Error Handling Middleware
+   * @param err - 傳入 Error Object 引數,Express 會跳過其他 Middleware 直接到 Error Handle
+   */
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`), 404);
+});
+
+// 給四個參數 Express 會知道是一個 Error Handle Middleware
+app.use(globalErrorHandler);
 
 module.exports = app;

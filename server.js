@@ -1,5 +1,12 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+
+process.on('uncaughtException', (err) => {
+  console.log('UNHANDLER EXCEPTION! 💥 Shutting down...');
+  console.log(err.name, err.message);
+  process.exit(1);
+});
+
 const app = require('./app');
 
 // 1) 環境變數
@@ -20,8 +27,18 @@ mongoose
     useFindAndModify: false,
     useUnifiedTopology: true,
   })
-  .then(() => console.log('DB connection successful!')); // console.log(con.connections);
+  .then(() => console.log('DB connection successful!'));
 
-// 5) 運行伺服器
+// 3) 運行伺服器
 const port = process.env.PORT || 5000;
-app.listen(port, () => console.log(`App running on port ${port}`));
+const server = app.listen(port, () =>
+  console.log(`App running on port ${port}`)
+);
+
+process.on('unhandledRejection', (err) => {
+  console.log(err.name, err.message);
+  console.log('UNHANDLER REJECTION! 💥 Shutting down...');
+  server.close(() => {
+    process.exit(1);
+  });
+});
