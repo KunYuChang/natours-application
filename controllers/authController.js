@@ -1,3 +1,4 @@
+const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
@@ -20,6 +21,8 @@ exports.signup = catchAsync(async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
+    passwordChangedAt: req.body.passwordChangedAt,
+    role: req.body.role,
   });
 
   const token = signToken(newUser._id);
@@ -75,9 +78,42 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   // 2) 驗證令牌
+  // 由於 jwt.verify 預設是 synchronous，通過 Promisify 使其轉為 asynchronous，因此它不會阻塞事件循環，因為雜湊往往需要相當長的時間。
+  // https://github.com/auth0/node-jsonwebtoken
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
-  // 3) 檢查用戶是否仍然存在
+  // 3) 檢查用戶是否仍然存在，假設已獲取Token的用戶被刪除了或更改密碼，那麼原本的Token應該要失效。
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser) {
+    return next(
+      new AppError('The user belonging to this token does no longer exist.'),
+      401
+    );
+  }
 
   // 4) 在令牌發出後檢查用戶是否更改了密碼
+  // eslint-disable-next-line no-empty
+  if (currentUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError('User recently changed password! Please log in again', 401)
+    );
+  }
+  // GRANT ACCESS TO PROTECTED ROUTE
+  req.user = currentUser;
   next();
 });
+
+// eslint-disable-next-line arrow-body-style
+exports.restrictTo = (...roles) => {
+  // express middlewares functions 必須是 req, res, next 三個引數，運用閉包獲取自己希望設定的引數之後回傳req, res, next
+  return (req, res, next) => {
+    // req.user 來自於上一個中介軟體所傳遞過來
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this action', 403)
+      );
+    }
+
+    next();
+  };
+};
