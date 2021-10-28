@@ -42,6 +42,12 @@
 - [morgan](https://www.npmjs.com/package/morgan) : LOG 程式執行的結果
 - [validator](https://www.npmjs.com/package/validator) : 用於 mongoose 驗證
 - [ndb](https://www.npmjs.com/package/ndb) : GoogleChromeLabs 所提供的除錯環境
-- [win-node-env](https://www.npmjs.com/package/win-node-env) : 協助 Windows OS. 可以在 package.json ENV. 設定上同 Mac OS.
+- [win-node-env](https://www.npmjs.com/package/win-node-env) : 協助 Windows ENV. 設定上同 Mac
 - [bcryptjs](https://www.npmjs.com/package/bcryptjs) : 用於轉換密碼的雜湊演算法
 - [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) : 身份驗證(Authentication)
+- [nodemailer](https://www.npmjs.com/package/nodemailer) : 發送 Email
+
+## Service
+
+- [Postman](https://www.postman.com/)
+- [mailtrap](https://mailtrap.io/)
