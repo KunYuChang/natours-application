@@ -69,6 +69,7 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+// 儲存密碼修改時間在存入資料庫前
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password') || this.isNew) return next();
 
@@ -77,6 +78,7 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+// 比對雜湊前後密碼是否一致
 userSchema.methods.correctPassword = async function (
   candidatePassword,
   userPassword
@@ -84,6 +86,7 @@ userSchema.methods.correctPassword = async function (
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
+// 比對密碼變更時間是否在JWT Token之後
 userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   if (this.passwordChangedAt) {
     const changedTimestamp = parseInt(
@@ -97,6 +100,7 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   return false;
 };
 
+// 創建一個重置密碼用的 Token
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
 
