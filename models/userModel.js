@@ -43,6 +43,11 @@ const userSchema = new mongoose.Schema({
   passwordChangeAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 
 /**
@@ -69,7 +74,6 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// 儲存密碼修改時間在存入資料庫前
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password') || this.isNew) return next();
 
@@ -78,7 +82,14 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// 比對雜湊前後密碼是否一致
+// 👉 搜尋結果只顯示符合{active:true}的內容。
+userSchema.pre(/^find/, function (next) {
+  // this points to the current query
+  this.find({ active: { $ne: false } });
+  next();
+});
+
+// 👉 比對雜湊前後密碼是否一致
 userSchema.methods.correctPassword = async function (
   candidatePassword,
   userPassword
