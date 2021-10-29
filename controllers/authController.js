@@ -15,6 +15,20 @@ const signToken = (id) =>
 
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true, // 限制瀏覽器不能訪問或修改，防止XSS攻擊竊取cookie。
+  };
+
+  // 生產環境下限制只能用https協議傳送給伺服器
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+
+  res.cookie('jwt', token, cookieOptions);
+
+  // 回應給使用者的資訊移除密碼
+  user.password = undefined;
 
   res.status(statusCode).json({
     status: 'success',
