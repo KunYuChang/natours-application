@@ -46,6 +46,7 @@
 - [bcryptjs](https://www.npmjs.com/package/bcryptjs) : 用於轉換密碼的雜湊演算法
 - [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) : 身份驗證(Authentication)
 - [nodemailer](https://www.npmjs.com/package/nodemailer) : 發送 Email
+- [express-rate-limit](https://www.npmjs.com/package/express-rate-limit) : 限制來自同一 IP 的重複請求
 
 ## Service
 

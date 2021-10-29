@@ -1,5 +1,7 @@
+// app.js 主要是處理 Express 中介軟體相關功能
 const express = require('express');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -8,13 +10,20 @@ const userRouter = require('./routes/userRoutes');
 
 const app = express();
 
-// 1) Middleware
+/////////////////////////////////////////////////////////////////////////////
+// 1) ⭐全域中介軟體(Global Middleware)
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// express.json() : Express 可以解讀 JSON String 轉成 JavaScript Object
-app.use(express.json());
+const limiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 60分鐘
+  max: 100, // 最高100次請求
+  message: 'Too many requests from this IP, please try agagin in an hour!',
+});
+app.use('/api', limiter);
+
+app.use(express.json()); // JSON String -> JS Object
 app.use(express.static(`${__dirname}/public`));
 
 app.use((req, res, next) => {
@@ -27,25 +36,22 @@ app.use((req, res, next) => {
   next();
 });
 
-// 3) ROUTE
+/////////////////////////////////////////////////////////////////////////////
+// 2) ⭐路由(ROUTE)
 
+// 匹配路由
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 
-/**
- * method all 代表 get, post...等等都符合
- * '*' 全部匹配
- * req.originalUrl 最初請求的url
- */
+// 萬用路由
 app.all('*', (req, res, next) => {
-  /**
-   * Global Error Handling Middleware
-   * @param err - 傳入 Error Object 引數,Express 會跳過其他 Middleware 直接到 Error Handle
-   */
-  next(new AppError(`Can't find ${req.originalUrl} on this server!`), 404);
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`), 404); // req.originalUrl 最初請求的url
 });
+// .all 代表包含get, post等等都符合, * 路徑全部匹配
+// next 傳入的參數如果是 Error Object，會直接跳過其他中介軟體到 Error Handle
 
-// 給四個參數 Express 會知道是一個 Error Handle Middleware
+// 錯誤處理路由
 app.use(globalErrorHandler);
+// 給四個參數 Express 會知道是一個 Error Handle Middleware
 
 module.exports = app;
