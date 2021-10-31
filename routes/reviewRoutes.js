@@ -2,7 +2,11 @@ const express = require('express');
 const reviewController = require('../controllers/reviewController');
 const authController = require('../controllers/authController');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
+
+// POST /tour/234fad4/reviews
+// POST /reviews
+// 都會被導向route('/')
 
 router
   .route('/')
