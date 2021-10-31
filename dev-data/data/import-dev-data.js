@@ -1,5 +1,8 @@
 /**
  * todo 匯入資料到資料庫
+ * 使用方式 : 在終端機手動執行本隻程式 (import/delete)
+ * 匯入輸入 : node ./dev-data/data/import-dev-data.js --import
+ * 刪除輸入 : node ./dev-data/data/import-dev-data.js --delete
  */
 
 const fs = require('fs');
@@ -25,9 +28,7 @@ mongoose
   .then(() => console.log('DB connection successful!'));
 
 // 4) 讀取檔案
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/tours-simple.json`, 'utf-8')
-);
+const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`, 'utf-8'));
 
 // 5) 資料導入資料庫
 const importData = async () => {

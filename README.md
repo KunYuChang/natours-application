@@ -47,6 +47,10 @@
 - [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) : 身份驗證(Authentication)
 - [nodemailer](https://www.npmjs.com/package/nodemailer) : 發送 Email
 - [express-rate-limit](https://www.npmjs.com/package/express-rate-limit) : 限制來自同一 IP 的重複請求
+- [helmet](https://www.npmjs.com/package/helmet) : 通過設置各種 HTTP Headers 來保護 Express Application
+- [express-mongo-sanitize](https://www.npmjs.com/package/express-mongo-sanitize) : 清理用戶提供的數據以防止 MongoDB Injection
+- [xss-clean](https://www.npmjs.com/package/xss-clean) : 轉換 HTML 標籤語法防止 XSS 攻擊
+- [hpp](https://www.npmjs.com/package/hpp) : 防止 HTTP 參數污染攻擊
 
 ## Service
 

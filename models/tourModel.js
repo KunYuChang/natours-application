@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
-const validator = require('validator');
+// const validator = require('validator');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -10,7 +10,7 @@ const tourSchema = new mongoose.Schema(
       unique: true,
       maxlength: [40, 'A tour name must have less or equal then 40 characters'],
       minlength: [10, 'A tour name must have more or equal then 10 characters'],
-      validate: [validator.isAlpha, 'Tour name must only contain characters'],
+      // validate: [validator.isAlpha, 'Tour name must only contain characters'],
     },
     slug: String,
     duration: {
@@ -77,6 +77,37 @@ const tourSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    startLocation: {
+      // GeoJSON
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    locations: [
+      {
+        // GeoJSON
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
@@ -91,8 +122,17 @@ const tourSchema = new mongoose.Schema(
  * 優點：節省資料庫空間
  * 缺點：由於Virtual 沒有儲存在資料庫中，因此無法查詢
  */
+
+// Virtual Properties
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
+});
+
+// Virtual Populate
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
 });
 
 /**
@@ -107,13 +147,29 @@ tourSchema.pre('save', function (next) {
   next();
 });
 
+// 嵌入法
+// tourSchema.pre('save', async function (next) {
+//   const guidesPromises = this.guides.map((id) => User.findById(id)); // @returns Promise Array
+//   this.guides = await Promise.all(guidesPromises);
+//   next();
+// });
+
 /**
  * QUERY MIDDLEWARE
- * /^find/ 是為了符合find, findOne, ... 等系列。
+ * this : 指向當前的查詢
+ * regex: /^find/ find, findOne, etc。
  */
 tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
   this.start = Date.now();
+  next();
+});
+
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
   next();
 });
 

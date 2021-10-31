@@ -32,7 +32,7 @@ exports.getAllTours = catchAsync(async (req, res) => {
 
 exports.getTour = catchAsync(async (req, res, next) => {
   // Tour.findById -- mongoose
-  const tour = await Tour.findById(req.params.id);
+  const tour = await Tour.findById(req.params.id).populate('reviews');
 
   // Tour.findOne({ _id: req.params.id}) -- mongoDB
 
